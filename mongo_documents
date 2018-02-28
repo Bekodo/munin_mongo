@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+from pymongo import MongoClient
+import sys
+
+class Monitor(object):
+    actions = ""
+    counters = ""
+    visitors = ""
+
+    def __init__(self):
+        client = MongoClient("192.168.0.130:27017")
+        db = client["travelcomp"]
+        self.actions = db.actions
+        self.visitors = db.visitors
+
+    def getValue(self):
+	       values = "actions.value "+str(self.actions.count())+"\n"\
+           "visitors.value "+str(self.visitors.count())
+	return values
+
+    def getConf(self):
+        config = "graph_title Mongo Documents\n"\
+        "graph_args --base 1000\n"\
+        "graph_vlabel Documents per second\n"\
+        "graph_category mongo\n"\
+        "actions.label Actions\n"\
+        "actions.type DERIVE\n"\
+        "actions.draw LINE1\n"\
+        "actions.colour COLOUR2\n"\
+        "visitors.label Visitors\n"\
+        "visitors.type DERIVE\n"\
+        "visitors.draw LINE1\n"\
+        "visitors.colour COLOUR4"
+	return config
+
+myMonitor = Monitor()
+if len(sys.argv) < 2:
+    print(myMonitor.getValue())
+elif sys.argv[1] == "config":
+    print(myMonitor.getConf())
+else:
+    print("Wrong Args")

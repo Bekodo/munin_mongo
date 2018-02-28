@@ -1,0 +1,37 @@
+#!/usr/bin/python
+
+from pymongo import MongoClient
+import sys
+import re
+
+class Monitor(object):
+    netValues = []
+    def __init__(self):
+        client = MongoClient("192.168.0.130:27017")
+        coll = client.admin
+        self.netValues = coll.command("serverStatus")["opcounters"]
+
+    def getValue(self):
+        values = ""
+        for key in self.netValues:
+        	values += key+".value "+str(self.netValues[key])+"\n"
+        return values[:-1]
+
+    def getConf(self):
+        config = "graph_title Mongo Commands\n"\
+        "graph_args --base 1024\n"\
+        "graph_vlabel byts per second\n"\
+        "graph_category mongo\n"
+        for key in sorted(self.netValues):
+            config += key+".label "+key+"\n"
+            config += key+".type DERIVE\n"
+            config += key+".draw LINE\n"
+        return config[:-1]
+
+myMonitor = Monitor()
+if len(sys.argv) < 2:
+    print(myMonitor.getValue())
+elif sys.argv[1] == "config":
+    print(myMonitor.getConf())
+else:
+    print("Wrong Args")
